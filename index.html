@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>摩斯密码记忆助手</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .tab {
+            padding: 12px 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        .tab.active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .tab-content {
+            display: none;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .morse-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .morse-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: transform 0.3s, background 0.3s;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+        }
+        
+        .morse-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .character {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .morse-code {
+            font-size: 1.2rem;
+            letter-spacing: 3px;
+            font-family: monospace;
+        }
+        
+        .morse-visual {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+            height: 20px;
+        }
+        
+        .dot, .dash {
+            display: inline-block;
+            background: white;
+            margin: 0 2px;
+            border-radius: 50%;
+        }
+        
+        .dot {
+            width: 10px;
+            height: 10px;
+        }
+        
+        .dash {
+            width: 25px;
+            height: 10px;
+            border-radius: 5px;
+        }
+        
+        .game-area {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .question {
+            font-size: 3rem;
+            margin: 20px 0;
+            min-height: 80px;
+        }
+        
+        .options {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 30px 0;
+        }
+        
+        .option {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.2rem;
+        }
+        
+        .option:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+        
+        .correct {
+            background: rgba(46, 204, 113, 0.5) !important;
+        }
+        
+        .incorrect {
+            background: rgba(231, 76, 60, 0.5) !important;
+        }
+        
+        .score {
+            font-size: 1.5rem;
+            margin: 20px 0;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background: #3498db;
+            width: 0%;
+            transition: width 0.5s;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+        
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+        
+        .sound-btn {
+            position: relative;
+        }
+        
+        .achievements {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .achievement {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0.5;
+            transition: opacity 0.3s;
+        }
+        
+        .achievement.unlocked {
+            opacity: 1;
+            background: rgba(241, 196, 15, 0.3);
+        }
+        
+        .achievement-icon {
+            font-size: 1.5rem;
+        }
+        
+        .practice-area {
+            text-align: center;
+        }
+        
+        .input-area {
+            margin: 20px 0;
+        }
+        
+        #morse-input {
+            padding: 10px;
+            font-size: 1.2rem;
+            width: 300px;
+            max-width: 100%;
+            border-radius: 5px;
+            border: none;
+            text-align: center;
+            font-family: monospace;
+            letter-spacing: 3px;
+        }
+        
+        .result {
+            margin-top: 20px;
+            min-height: 30px;
+            font-size: 1.2rem;
+        }
+        
+        .flash {
+            animation: flash 0.5s;
+        }
+        
+        @keyframes flash {
+            0%, 100% { background: transparent; }
+            50% { background: rgba(46, 204, 113, 0.5); }
+        }
+        
+        @media (max-width: 768px) {
+            .morse-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+            
+            .options {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .option {
+                width: 80%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>摩斯密码记忆助手</h1>
+            <p class="subtitle">通过互动游戏轻松记忆摩斯密码</p>
+        </header>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="learn">学习模式</div>
+            <div class="tab" data-tab="game">记忆游戏</div>
+            <div class="tab" data-tab="practice">练习模式</div>
+            <div class="tab" data-tab="achievements">成就</div>
+        </div>
+        
+        <div id="learn" class="tab-content active">
+            <h2>摩斯密码表</h2>
+            <p>点击卡片听取声音，可视化帮助记忆</p>
+            <div class="morse-grid" id="morse-grid">
+                <!-- 摩斯密码卡片将通过JavaScript生成 -->
+            </div>
+        </div>
+        
+        <div id="game" class="tab-content">
+            <div class="game-area">
+                <h2>记忆挑战</h2>
+                <p>选择正确的摩斯密码对应的字母或数字</p>
+                <div class="score">得分: <span id="score">0</span> | 连续正确: <span id="streak">0</span></div>
+                <div class="progress-bar">
+                    <div class="progress" id="progress"></div>
+                </div>
+                <div class="question" id="question"></div>
+                <div class="options" id="options">
+                    <!-- 选项将通过JavaScript生成 -->
+                </div>
+                <div class="controls">
+                    <button id="play-sound">播放声音</button>
+                    <button id="next-question">下一题</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="practice" class="tab-content">
+            <div class="practice-area">
+                <h2>自由练习</h2>
+                <p>在下方输入摩斯密码（使用.和-），看看对应的字符是什么</p>
+                <div class="input-area">
+                    <input type="text" id="morse-input" placeholder="例如: .- 表示A" autocomplete="off">
+                    <button id="translate">翻译</button>
+                </div>
+                <div class="result" id="practice-result"></div>
+                <div class="controls">
+                    <button id="clear-practice">清空</button>
+                    <button id="random-practice">随机示例</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="achievements" class="tab-content">
+            <h2>成就系统</h2>
+            <p>完成学习目标解锁成就</p>
+            <div class="achievements" id="achievements-list">
+                <!-- 成就将通过JavaScript生成 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 摩斯密码字典
+        const morseCode = {
+            'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.', 
+            'G': '--.', 'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..', 
+            'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.', 
+            'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-', 
+            'Y': '-.--', 'Z': '--..', '0': '-----', '1': '.----', '2': '..---', 
+            '3': '...--', '4': '....-', '5': '.....', '6': '-....', '7': '--...', 
+            '8': '---..', '9': '----.', ' ': '/'
+        };
+
+        // 反转字典，用于从摩斯密码查找字符
+        const reverseMorse = {};
+        for (const [char, code] of Object.entries(morseCode)) {
+            reverseMorse[code] = char;
+        }
+
+        // 成就系统
+        const achievements = [
+            { id: 'first_5', name: '初出茅庐', description: '答对5道题', icon: '⭐', progress: 0, target: 5, unlocked: false },
+            { id: 'streak_5', name: '势如破竹', description: '连续答对5道题', icon: '🔥', progress: 0, target: 5, unlocked: false },
+            { id: 'score_20', name: '小有成就', description: '总分达到20分', icon: '🏆', progress: 0, target: 20, unlocked: false },
+            { id: 'learn_all', name: '学富五车', description: '学习所有字母', icon: '📚', progress: 0, target: Object.keys(morseCode).length-1, unlocked: false },
+            { id: 'practice_10', name: '勤学苦练', description: '完成10次练习', icon: '💪', progress: 0, target: 10, unlocked: false }
+        ];
+
+        // 游戏状态
+        let gameState = {
+            score: 0,
+            streak: 0,
+            totalQuestions: 0,
+            learnedChars: new Set(),
+            practiceCount: 0
+        };
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            // 生成摩斯密码卡片
+            generateMorseCards();
+            
+            // 生成成就列表
+            generateAchievements();
+            
+            // 设置标签页切换
+            setupTabs();
+            
+            // 初始化游戏
+            initGame();
+            
+            // 设置练习模式
+            setupPractice();
+            
+            // 加载保存的游戏状态
+            loadGameState();
+        });
+
+        // 生成摩斯密码卡片
+        function generateMorseCards() {
+            const grid = document.getElementById('morse-grid');
+            
+            for (const [char, code] of Object.entries(morseCode)) {
+                if (char === ' ') return; // 跳过空格
+                
+                const card = document.createElement('div');
+                card.className = 'morse-card';
+                card.innerHTML = `
+                    <div class="character">${char}</div>
+                    <div class="morse-visual" id="visual-${char}"></div>
+                    <div class="morse-code">${code}</div>
+                `;
+                
+                // 添加点击事件播放声音
+                card.addEventListener('click', function() {
+                    playMorseCode(code);
+                    // 标记为已学习
+                    gameState.learnedChars.add(char);
+                    updateAchievementProgress('learn_all', gameState.learnedChars.size);
+                    saveGameState();
+                    
+                    // 添加闪光效果
+                    card.classList.add('flash');
+                    setTimeout(() => card.classList.remove('flash'), 500);
+                });
+                
+                grid.appendChild(card);
+                
+                // 生成可视化摩斯密码
+                generateMorseVisual(code, char);
+            }
+        }
+
+        // 生成可视化摩斯密码（点和划线）
+        function generateMorseVisual(code, char) {
+            const visual = document.getElementById(`visual-${char}`);
+            for (const symbol of code) {
+                const element = document.createElement('span');
+                element.className = symbol === '.' ? 'dot' : 'dash';
+                visual.appendChild(element);
+            }
+        }
+
+        // 设置标签页切换
+        function setupTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // 移除所有active类
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(tc => tc.classList.remove('active'));
+                    
+                    // 添加active类到当前标签
+                    this.classList.add('active');
+                    document.getElementById(tabId).classList.add('active');
+                    
+                    // 如果是游戏标签，确保游戏已初始化
+                    if (tabId === 'game') {
+                        initGame();
+                    }
+                });
+            });
+        }
+
+        // 初始化游戏
+        function initGame() {
+            const playSoundBtn = document.getElementById('play-sound');
+            const nextQuestionBtn = document.getElementById('next-question');
+            const questionEl = document.getElementById('question');
+            const optionsEl = document.getElementById('options');
+            
+            let currentQuestion = null;
+            
+            // 生成新问题
+            function generateQuestion() {
+                // 随机选择是字符到摩斯密码还是摩斯密码到字符
+                const isCharToMorse = Math.random() > 0.5;
+                const chars = Object.keys(morseCode).filter(c => c !== ' '); // 排除空格
+                const correctChar = chars[Math.floor(Math.random() * chars.length)];
+                const correctCode = morseCode[correctChar];
+                
+                currentQuestion = {
+                    type: isCharToMorse ? 'charToMorse' : 'morseToChar',
+                    correctChar,
+                    correctCode
+                };
+                
+                // 显示问题
+                if (isCharToMorse) {
+                    questionEl.textContent = `"${correctChar}" 的摩斯密码是？`;
+                } else {
+                    questionEl.textContent = `"${correctCode}" 对应的字符是？`;
+                }
+                
+                // 生成选项
+                generateOptions(correctChar, correctCode, isCharToMorse);
+                
+                // 更新进度条
+                updateProgressBar();
+            }
+            
+            // 生成选项
+            function generateOptions(correctChar, correctCode, isCharToMorse) {
+                optionsEl.innerHTML = '';
+                
+                // 创建选项数组（包含正确答案）
+                let options = [];
+                if (isCharToMorse) {
+                    options.push(correctCode);
+                    
+                    // 添加错误选项
+                    const codes = Object.values(morseCode).filter(c => c !== correctCode && c !== '/');
+                    while (options.length < 4 && codes.length > 0) {
+                        const randomCode = codes[Math.floor(Math.random() * codes.length)];
+                        if (!options.includes(randomCode)) {
+                            options.push(randomCode);
+                        }
+                    }
+                } else {
+                    options.push(correctChar);
+                    
+                    // 添加错误选项
+                    const chars = Object.keys(morseCode).filter(c => c !== correctChar && c !== ' ');
+                    while (options.length < 4 && chars.length > 0) {
+                        const randomChar = chars[Math.floor(Math.random() * chars.length)];
+                        if (!options.includes(randomChar)) {
+                            options.push(randomChar);
+                        }
+                    }
+                }
+                
+                // 打乱选项顺序
+                options = shuffleArray(options);
+                
+                // 创建选项元素
+                options.forEach(option => {
+                    const optionEl = document.createElement('div');
+                    optionEl.className = 'option';
+                    optionEl.textContent = option;
+                    
+                    optionEl.addEventListener('click', function() {
+                        // 检查答案
+                        const isCorrect = isCharToMorse ? 
+                            (option === correctCode) : (option === correctChar);
+                        
+                        if (isCorrect) {
+                            optionEl.classList.add('correct');
+                            gameState.score += 10;
+                            gameState.streak++;
+                            gameState.totalQuestions++;
+                            
+                            // 更新成就进度
+                            updateAchievementProgress('first_5', gameState.totalQuestions);
+                            updateAchievementProgress('score_20', gameState.score/10);
+                            updateAchievementProgress('streak_5', gameState.streak);
+                            
+                            // 播放正确音效
+                            playCorrectSound();
+                        } else {
+                            optionEl.classList.add('incorrect');
+                            gameState.streak = 0;
+                            
+                            // 显示正确答案
+                            const correctOption = isCharToMorse ? correctCode : correctChar;
+                            document.querySelectorAll('.option').forEach(opt => {
+                                if (opt.textContent === correctOption) {
+                                    opt.classList.add('correct');
+                                }
+                            });
+                            
+                            // 播放错误音效
+                            playIncorrectSound();
+                        }
+                        
+                        // 更新分数显示
+                        updateScoreDisplay();
+                        
+                        // 禁用所有选项
+                        document.querySelectorAll('.option').forEach(opt => {
+                            opt.style.pointerEvents = 'none';
+                        });
+                        
+                        // 保存游戏状态
+                        saveGameState();
+                    });
+                    
+                    optionsEl.appendChild(optionEl);
+                });
+            }
+            
+            // 播放声音按钮事件
+            playSoundBtn.addEventListener('click', function() {
+                if (currentQuestion) {
+                    playMorseCode(currentQuestion.correctCode);
+                }
+            });
+            
+            // 下一题按钮事件
+            nextQuestionBtn.addEventListener('click', generateQuestion);
+            
+            // 初始生成一个问题
+            generateQuestion();
+        }
+
+        // 设置练习模式
+        function setupPractice() {
+            const translateBtn = document.getElementById('translate');
+            const clearBtn = document.getElementById('clear-practice');
+            const randomBtn = document.getElementById('random-practice');
+            const input = document.getElementById('morse-input');
+            const result = document.getElementById('practice-result');
+            
+            // 翻译按钮事件
+            translateBtn.addEventListener('click', function() {
+                const morse = input.value.trim();
+                if (morse) {
+                    // 增加练习次数
+                    gameState.practiceCount++;
+                    updateAchievementProgress('practice_10', gameState.practiceCount);
+                    saveGameState();
+                    
+                    if (reverseMorse[morse]) {
+                        result.textContent = `"${morse}" 对应的字符是: ${reverseMorse[morse]}`;
+                        result.style.color = '#2ecc71';
+                        playMorseCode(morse);
+                    } else {
+                        result.textContent = `"${morse}" 不是有效的摩斯密码`;
+                        result.style.color = '#e74c3c';
+                    }
+                }
+            });
+            
+            // 清空按钮事件
+            clearBtn.addEventListener('click', function() {
+                input.value = '';
+                result.textContent = '';
+            });
+            
+            // 随机示例按钮事件
+            randomBtn.addEventListener('click', function() {
+                const chars = Object.keys(morseCode).filter(c => c !== ' ');
+                const randomChar = chars[Math.floor(Math.random() * chars.length)];
+                const morse = morseCode[randomChar];
+                input.value = morse;
+                
+                // 自动翻译
+                translateBtn.click();
+            });
+            
+            // 按回车键翻译
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    translateBtn.click();
+                }
+            });
+        }
+
+        // 生成成就列表
+        function generateAchievements() {
+            const achievementsList = document.getElementById('achievements-list');
+            
+            achievements.forEach(achievement => {
+                const achievementEl = document.createElement('div');
+                achievementEl.className = `achievement ${achievement.unlocked ? 'unlocked' : ''}`;
+                achievementEl.id = `achievement-${achievement.id}`;
+                
+                achievementEl.innerHTML = `
+                    <div class="achievement-icon">${achievement.icon}</div>
+                    <div>
+                        <div class="achievement-name">${achievement.name}</div>
+                        <div class="achievement-description">${achievement.description}</div>
+                        <div class="achievement-progress">${achievement.progress}/${achievement.target}</div>
+                    </div>
+                `;
+                
+                achievementsList.appendChild(achievementEl);
+            });
+        }
+
+        // 更新成就进度
+        function updateAchievementProgress(achievementId, progress) {
+            const achievement = achievements.find(a => a.id === achievementId);
+            if (achievement && !achievement.unlocked) {
+                achievement.progress = Math.min(progress, achievement.target);
+                
+                // 检查是否达成成就
+                if (achievement.progress >= achievement.target) {
+                    achievement.unlocked = true;
+                    showAchievementNotification(achievement);
+                }
+                
+                // 更新UI
+                const achievementEl = document.getElementById(`achievement-${achievementId}`);
+                if (achievementEl) {
+                    achievementEl.querySelector('.achievement-progress').textContent = 
+                        `${achievement.progress}/${achievement.target}`;
+                    
+                    if (achievement.unlocked) {
+                        achievementEl.classList.add('unlocked');
+                    }
+                }
+                
+                saveGameState();
+            }
+        }
+
+        // 显示成就解锁通知
+        function showAchievementNotification(achievement) {
+            // 在实际应用中，这里可以显示一个临时通知
+            console.log(`成就解锁: ${achievement.name} - ${achievement.description}`);
+        }
+
+        // 更新分数显示
+        function updateScoreDisplay() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('streak').textContent = gameState.streak;
+        }
+
+        // 更新进度条
+        function updateProgressBar() {
+            const progressBar = document.getElementById('progress');
+            // 简单模拟进度，实际应用中可以根据学习进度调整
+            const progress = Math.min(90, (gameState.totalQuestions % 10) * 10);
+            progressBar.style.width = `${progress}%`;
+        }
+
+        // 播放摩斯密码声音
+        function playMorseCode(code) {
+            // 创建音频上下文
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            const audioCtx = new AudioContext();
+            
+            // 创建振荡器
+            const oscillator = audioCtx.createOscillator();
+            oscillator.type = 'sine';
+            oscillator.frequency.value = 600; // 频率
+            
+            // 创建增益节点（控制音量）
+            const gainNode = audioCtx.createGain();
+            gainNode.gain.value = 0;
+            
+            // 连接节点
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            // 开始振荡
+            oscillator.start();
+            
+            let time = audioCtx.currentTime;
+            
+            // 播放每个符号
+            for (const symbol of code) {
+                if (symbol === '.') {
+                    // 点：短音
+                    gainNode.gain.setValueAtTime(0.5, time);
+                    time += 0.1; // 短音持续0.1秒
+                    gainNode.gain.setValueAtTime(0, time);
+                    time += 0.1; // 符号间间隔
+                } else if (symbol === '-') {
+                    // 划线：长音
+                    gainNode.gain.setValueAtTime(0.5, time);
+                    time += 0.3; // 长音持续0.3秒
+                    gainNode.gain.setValueAtTime(0, time);
+                    time += 0.1; // 符号间间隔
+                }
+            }
+            
+            // 停止振荡器
+            setTimeout(() => {
+                oscillator.stop();
+            }, (time - audioCtx.currentTime) * 1000);
+        }
+
+        // 播放正确音效
+        function playCorrectSound() {
+            // 简单的正确音效
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            oscillator.connect(audioCtx.destination);
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+            oscillator.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+            oscillator.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // G5
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.3);
+        }
+
+        // 播放错误音效
+        function playIncorrectSound() {
+            // 简单的错误音效
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            oscillator.connect(audioCtx.destination);
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(392, audioCtx.currentTime); // G4
+            oscillator.frequency.setValueAtTime(311, audioCtx.currentTime + 0.2); // D#4
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.4);
+        }
+
+        // 保存游戏状态到本地存储
+        function saveGameState() {
+            const stateToSave = {
+                score: gameState.score,
+                streak: gameState.streak,
+                totalQuestions: gameState.totalQuestions,
+                learnedChars: Array.from(gameState.learnedChars),
+                practiceCount: gameState.practiceCount,
+                achievements: achievements
+            };
+            localStorage.setItem('morseCodeTrainer', JSON.stringify(stateToSave));
+        }
+
+        // 从本地存储加载游戏状态
+        function loadGameState() {
+            const savedState = localStorage.getItem('morseCodeTrainer');
+            if (savedState) {
+                const state = JSON.parse(savedState);
+                gameState.score = state.score || 0;
+                gameState.streak = state.streak || 0;
+                gameState.totalQuestions = state.totalQuestions || 0;
+                gameState.learnedChars = new Set(state.learnedChars || []);
+                gameState.practiceCount = state.practiceCount || 0;
+                
+                if (state.achievements) {
+                    achievements.forEach((ach, index) => {
+                        if (state.achievements[index]) {
+                            ach.progress = state.achievements[index].progress || 0;
+                            ach.unlocked = state.achievements[index].unlocked || false;
+                            
+                            // 更新UI
+                            const achievementEl = document.getElementById(`achievement-${ach.id}`);
+                            if (achievementEl) {
+                                achievementEl.querySelector('.achievement-progress').textContent = 
+                                    `${ach.progress}/${ach.target}`;
+                                
+                                if (ach.unlocked) {
+                                    achievementEl.classList.add('unlocked');
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                updateScoreDisplay();
+            }
+        }
+
+        // 工具函数：打乱数组顺序
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+    </script>
+</body>
+</html>
