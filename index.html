@@ -151,6 +151,29 @@
             padding: 20px;
         }
         
+        .difficulty-selector {
+            margin: 20px 0;
+        }
+        
+        .difficulty-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 0 5px;
+        }
+        
+        .difficulty-btn.active {
+            background: rgba(52, 152, 219, 0.7);
+        }
+        
+        .difficulty-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
         .question {
             font-size: 3rem;
             margin: 20px 0;
@@ -340,6 +363,12 @@
             <div class="game-area">
                 <h2>记忆挑战</h2>
                 <p>选择正确的摩斯密码对应的字母或数字</p>
+                <div class="difficulty-selector">
+                    <p>选择难度：</p>
+                    <button class="difficulty-btn active" data-difficulty="1">简单 (1个字符)</button>
+                    <button class="difficulty-btn" data-difficulty="2">中等 (2个字符)</button>
+                    <button class="difficulty-btn" data-difficulty="3">高级 (3个字符)</button>
+                </div>
                 <div class="score">得分: <span id="score">0</span> | 连续正确: <span id="streak">0</span></div>
                 <div class="progress-bar">
                     <div class="progress" id="progress"></div>
@@ -358,9 +387,10 @@
         <div id="practice" class="tab-content">
             <div class="practice-area">
                 <h2>自由练习</h2>
-                <p>在下方输入摩斯密码（使用.和-），看看对应的字符是什么</p>
+                <p>在下方输入摩斯密码（使用.和-），用空格分隔不同字符的代码，看看对应的字符串是什么</p>
+                <p>例如：输入 <code>... ---</code> 会得到 "SO"</p>
                 <div class="input-area">
-                    <input type="text" id="morse-input" placeholder="例如: .- 表示A" autocomplete="off">
+                    <input type="text" id="morse-input" placeholder="例如: ... --- 表示SO" autocomplete="off">
                     <button id="translate">翻译</button>
                 </div>
                 <div class="result" id="practice-result"></div>
@@ -413,7 +443,8 @@
             streak: 0,
             totalQuestions: 0,
             learnedChars: new Set(),
-            practiceCount: 0
+            practiceCount: 0,
+            difficulty: 1 // 默认简单难度
         };
 
         // 初始化页面
@@ -432,6 +463,9 @@
             
             // 设置练习模式
             setupPractice();
+            
+            // 设置难度选择
+            setupDifficultySelector();
             
             // 加载保存的游戏状态
             loadGameState();
@@ -507,6 +541,26 @@
             });
         }
 
+        // 设置难度选择
+        function setupDifficultySelector() {
+            const difficultyBtns = document.querySelectorAll('.difficulty-btn');
+            
+            difficultyBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // 移除所有active类
+                    difficultyBtns.forEach(b => b.classList.remove('active'));
+                    // 添加active类到当前按钮
+                    this.classList.add('active');
+                    // 更新难度
+                    gameState.difficulty = parseInt(this.getAttribute('data-difficulty'));
+                    // 重新生成问题
+                    if (document.getElementById('game').classList.contains('active')) {
+                        initGame();
+                    }
+                });
+            });
+        }
+
         // 初始化游戏
         function initGame() {
             const playSoundBtn = document.getElementById('play-sound');
@@ -514,38 +568,52 @@
             const questionEl = document.getElementById('question');
             const optionsEl = document.getElementById('options');
             
+            // 重置游戏状态
+            gameState.score = 0;
+            gameState.streak = 0;
+            updateScoreDisplay();
+            
             let currentQuestion = null;
             
             // 生成新问题
             function generateQuestion() {
                 // 随机选择是字符到摩斯密码还是摩斯密码到字符
                 const isCharToMorse = Math.random() > 0.5;
+                
+                // 根据难度生成字符串
                 const chars = Object.keys(morseCode).filter(c => c !== ' '); // 排除空格
-                const correctChar = chars[Math.floor(Math.random() * chars.length)];
-                const correctCode = morseCode[correctChar];
+                let correctString = '';
+                let correctCode = '';
+                
+                // 生成指定长度的字符串
+                for (let i = 0; i < gameState.difficulty; i++) {
+                    const randomChar = chars[Math.floor(Math.random() * chars.length)];
+                    correctString += randomChar;
+                    correctCode += (i > 0 ? ' ' : '') + morseCode[randomChar];
+                }
                 
                 currentQuestion = {
                     type: isCharToMorse ? 'charToMorse' : 'morseToChar',
-                    correctChar,
+                    correctString,
                     correctCode
                 };
                 
                 // 显示问题
                 if (isCharToMorse) {
-                    questionEl.textContent = `"${correctChar}" 的摩斯密码是？`;
+                    questionEl.textContent = `"${correctString}" 的摩斯密码是？`;
                 } else {
-                    questionEl.textContent = `"${correctCode}" 对应的字符是？`;
+                    questionEl.textContent = `"${correctCode}" 对应的字符串是？`;
                 }
                 
                 // 生成选项
-                generateOptions(correctChar, correctCode, isCharToMorse);
+                generateOptions(correctString, correctCode, isCharToMorse);
                 
                 // 更新进度条
                 updateProgressBar();
             }
             
             // 生成选项
-            function generateOptions(correctChar, correctCode, isCharToMorse) {
+            function generateOptions(correctString, correctCode, isCharToMorse) {
                 optionsEl.innerHTML = '';
                 
                 // 创建选项数组（包含正确答案）
@@ -554,23 +622,43 @@
                     options.push(correctCode);
                     
                     // 添加错误选项
-                    const codes = Object.values(morseCode).filter(c => c !== correctCode && c !== '/');
-                    while (options.length < 4 && codes.length > 0) {
-                        const randomCode = codes[Math.floor(Math.random() * codes.length)];
-                        if (!options.includes(randomCode)) {
-                            options.push(randomCode);
+                    while (options.length < 4) {
+                        // 生成一个错误答案
+                        let wrongCode = '';
+                        const chars = Object.keys(morseCode).filter(c => c !== ' ');
+                        
+                        for (let i = 0; i < gameState.difficulty; i++) {
+                            const randomChar = chars[Math.floor(Math.random() * chars.length)];
+                            wrongCode += (i > 0 ? ' ' : '') + morseCode[randomChar];
                         }
+                        
+                        if (!options.includes(wrongCode)) {
+                            options.push(wrongCode);
+                        }
+                        
+                        // 防止无限循环
+                        if (options.length >= 4) break;
                     }
                 } else {
-                    options.push(correctChar);
+                    options.push(correctString);
                     
                     // 添加错误选项
-                    const chars = Object.keys(morseCode).filter(c => c !== correctChar && c !== ' ');
-                    while (options.length < 4 && chars.length > 0) {
-                        const randomChar = chars[Math.floor(Math.random() * chars.length)];
-                        if (!options.includes(randomChar)) {
-                            options.push(randomChar);
+                    while (options.length < 4) {
+                        // 生成一个错误答案
+                        let wrongString = '';
+                        const chars = Object.keys(morseCode).filter(c => c !== ' ');
+                        
+                        for (let i = 0; i < gameState.difficulty; i++) {
+                            const randomChar = chars[Math.floor(Math.random() * chars.length)];
+                            wrongString += randomChar;
                         }
+                        
+                        if (!options.includes(wrongString)) {
+                            options.push(wrongString);
+                        }
+                        
+                        // 防止无限循环
+                        if (options.length >= 4) break;
                     }
                 }
                 
@@ -586,7 +674,7 @@
                     optionEl.addEventListener('click', function() {
                         // 检查答案
                         const isCorrect = isCharToMorse ? 
-                            (option === correctCode) : (option === correctChar);
+                            (option === correctCode) : (option === correctString);
                         
                         if (isCorrect) {
                             optionEl.classList.add('correct');
@@ -606,7 +694,7 @@
                             gameState.streak = 0;
                             
                             // 显示正确答案
-                            const correctOption = isCharToMorse ? correctCode : correctChar;
+                            const correctOption = isCharToMorse ? correctCode : correctString;
                             document.querySelectorAll('.option').forEach(opt => {
                                 if (opt.textContent === correctOption) {
                                     opt.classList.add('correct');
@@ -664,12 +752,14 @@
                     updateAchievementProgress('practice_10', gameState.practiceCount);
                     saveGameState();
                     
-                    if (reverseMorse[morse]) {
-                        result.textContent = `"${morse}" 对应的字符是: ${reverseMorse[morse]}`;
+                    // 翻译摩斯密码
+                    const translation = translateMorseString(morse);
+                    if (translation) {
+                        result.textContent = `"${morse}" 对应的字符串是: ${translation}`;
                         result.style.color = '#2ecc71';
                         playMorseCode(morse);
                     } else {
-                        result.textContent = `"${morse}" 不是有效的摩斯密码`;
+                        result.textContent = `"${morse}" 包含无效的摩斯密码`;
                         result.style.color = '#e74c3c';
                     }
                 }
@@ -684,8 +774,14 @@
             // 随机示例按钮事件
             randomBtn.addEventListener('click', function() {
                 const chars = Object.keys(morseCode).filter(c => c !== ' ');
-                const randomChar = chars[Math.floor(Math.random() * chars.length)];
-                const morse = morseCode[randomChar];
+                const length = Math.floor(Math.random() * 5) + 1; // 1-5个字符
+                let morse = '';
+                
+                for (let i = 0; i < length; i++) {
+                    const randomChar = chars[Math.floor(Math.random() * chars.length)];
+                    morse += (i > 0 ? ' ' : '') + morseCode[randomChar];
+                }
+                
                 input.value = morse;
                 
                 // 自动翻译
@@ -698,6 +794,22 @@
                     translateBtn.click();
                 }
             });
+        }
+
+        // 翻译摩斯密码字符串
+        function translateMorseString(morseString) {
+            const codes = morseString.split(' ');
+            let result = '';
+            
+            for (const code of codes) {
+                if (reverseMorse[code]) {
+                    result += reverseMorse[code];
+                } else {
+                    return null; // 无效的摩斯密码
+                }
+            }
+            
+            return result;
         }
 
         // 生成成就列表
@@ -807,6 +919,9 @@
                     time += 0.3; // 长音持续0.3秒
                     gainNode.gain.setValueAtTime(0, time);
                     time += 0.1; // 符号间间隔
+                } else if (symbol === ' ') {
+                    // 字符间间隔
+                    time += 0.2;
                 }
             }
             
@@ -851,6 +966,7 @@
                 totalQuestions: gameState.totalQuestions,
                 learnedChars: Array.from(gameState.learnedChars),
                 practiceCount: gameState.practiceCount,
+                difficulty: gameState.difficulty,
                 achievements: achievements
             };
             localStorage.setItem('morseCodeTrainer', JSON.stringify(stateToSave));
@@ -866,6 +982,16 @@
                 gameState.totalQuestions = state.totalQuestions || 0;
                 gameState.learnedChars = new Set(state.learnedChars || []);
                 gameState.practiceCount = state.practiceCount || 0;
+                gameState.difficulty = state.difficulty || 1;
+                
+                // 更新难度按钮状态
+                document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                    if (parseInt(btn.getAttribute('data-difficulty')) === gameState.difficulty) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
                 
                 if (state.achievements) {
                     achievements.forEach((ach, index) => {
