@@ -146,16 +146,16 @@
             border-radius: 5px;
         }
         
-        .game-area {
+        .game-area, .word-test-area, .practice-area {
             text-align: center;
             padding: 20px;
         }
         
-        .difficulty-selector {
+        .difficulty-selector, .test-mode-selector, .mode-selector {
             margin: 20px 0;
         }
         
-        .difficulty-btn {
+        .difficulty-btn, .test-mode-btn, .mode-btn {
             background: rgba(255, 255, 255, 0.2);
             border: none;
             color: white;
@@ -166,18 +166,50 @@
             margin: 0 5px;
         }
         
-        .difficulty-btn.active {
+        .difficulty-btn.active, .test-mode-btn.active, .mode-btn.active {
             background: rgba(52, 152, 219, 0.7);
         }
         
-        .difficulty-btn:hover {
+        .difficulty-btn:hover, .test-mode-btn:hover, .mode-btn:hover {
             background: rgba(255, 255, 255, 0.3);
         }
         
-        .question {
-            font-size: 3rem;
+        .word-length-selector {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
             margin: 20px 0;
-            min-height: 80px;
+        }
+        
+        .word-length-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .word-length-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .word-length-display {
+            font-size: 1.2rem;
+            min-width: 40px;
+            text-align: center;
+        }
+        
+        .question, .morse-question {
+            font-size: 2rem;
+            margin: 20px 0;
+            min-height: 60px;
         }
         
         .options {
@@ -231,7 +263,7 @@
             transition: width 0.5s;
         }
         
-        .controls {
+        .controls, .test-controls {
             display: flex;
             justify-content: center;
             gap: 15px;
@@ -272,8 +304,26 @@
             transform: scale(1.05);
         }
         
-        .sound-btn {
-            position: relative;
+        .input-area {
+            margin: 20px 0;
+        }
+        
+        #morse-input, #text-input, .word-input {
+            padding: 10px;
+            font-size: 1.2rem;
+            width: 300px;
+            max-width: 100%;
+            border-radius: 5px;
+            border: none;
+            text-align: center;
+            font-family: monospace;
+            letter-spacing: 3px;
+        }
+        
+        .result, .test-result {
+            margin-top: 20px;
+            min-height: 30px;
+            font-size: 1.2rem;
         }
         
         .achievements {
@@ -304,55 +354,6 @@
             font-size: 1.5rem;
         }
         
-        .practice-area {
-            text-align: center;
-        }
-        
-        .mode-selector {
-            margin: 20px 0;
-        }
-        
-        .mode-btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin: 0 5px;
-        }
-        
-        .mode-btn.active {
-            background: rgba(52, 152, 219, 0.7);
-        }
-        
-        .mode-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-        
-        .input-area {
-            margin: 20px 0;
-        }
-        
-        #morse-input, #text-input {
-            padding: 10px;
-            font-size: 1.2rem;
-            width: 300px;
-            max-width: 100%;
-            border-radius: 5px;
-            border: none;
-            text-align: center;
-            font-family: monospace;
-            letter-spacing: 3px;
-        }
-        
-        .result {
-            margin-top: 20px;
-            min-height: 30px;
-            font-size: 1.2rem;
-        }
-        
         .flash {
             animation: flash 0.5s;
         }
@@ -375,6 +376,14 @@
             .option {
                 width: 80%;
             }
+            
+            .tabs {
+                flex-wrap: wrap;
+            }
+            
+            .tab {
+                padding: 10px 15px;
+            }
         }
     </style>
 </head>
@@ -388,6 +397,7 @@
         <div class="tabs">
             <div class="tab active" data-tab="learn">学习模式</div>
             <div class="tab" data-tab="game">记忆游戏</div>
+            <div class="tab" data-tab="word-test">单词测试</div>
             <div class="tab" data-tab="practice">练习模式</div>
             <div class="tab" data-tab="achievements">成就</div>
         </div>
@@ -422,6 +432,33 @@
                 <div class="controls">
                     <button id="play-sound">播放声音</button>
                     <button id="next-question">下一题</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="word-test" class="tab-content">
+            <div class="word-test-area">
+                <h2>单词测试</h2>
+                <div class="test-mode-selector">
+                    <p>选择测试模式：</p>
+                    <button class="test-mode-btn active" data-mode="read-write">读写模式</button>
+                    <button class="test-mode-btn" data-mode="listening">听力测试</button>
+                </div>
+                <div class="word-length-selector">
+                    <p>单词长度：</p>
+                    <button class="word-length-btn" id="decrease-length">-</button>
+                    <div class="word-length-display"><span id="word-length">3</span></div>
+                    <button class="word-length-btn" id="increase-length">+</button>
+                </div>
+                <div class="test-area">
+                    <div class="morse-question" id="morse-question"></div>
+                    <input type="text" class="word-input" id="word-input" placeholder="输入单词" autocomplete="off">
+                    <div class="test-controls">
+                        <button class="test-btn" id="check-answer">检查答案</button>
+                        <button class="test-btn" id="play-word">播放单词</button>
+                        <button class="test-btn" id="next-word">下一单词</button>
+                    </div>
+                    <div class="test-result" id="test-result"></div>
                 </div>
             </div>
         </div>
@@ -488,13 +525,24 @@
             reverseMorse[code] = char;
         }
 
+        // 常用单词列表（按长度分组）
+        const wordLists = {
+            3: ['CAT', 'DOG', 'SUN', 'CAR', 'BED', 'EGG', 'ICE', 'KEY', 'LOW', 'MAP'],
+            4: ['FISH', 'BOOK', 'MOON', 'STAR', 'TREE', 'FIRE', 'WIND', 'SNOW', 'RAIN', 'LAKE'],
+            5: ['APPLE', 'HOUSE', 'WATER', 'EARTH', 'LIGHT', 'MUSIC', 'PLANT', 'STONE', 'CLOUD', 'GRASS'],
+            6: ['FRIEND', 'FAMILY', 'SCHOOL', 'GARDEN', 'ANIMAL', 'FLOWER', 'PENCIL', 'WINDOW', 'POCKET', 'SILVER'],
+            7: ['TEACHER', 'COUNTRY', 'WEATHER', 'HOLIDAY', 'PICTURE', 'MORNING', 'EVENING', 'LIBRARY', 'HISTORY', 'SCIENCE'],
+            8: ['LANGUAGE', 'BUILDING', 'MOUNTAIN', 'HOSPITAL', 'UNIVERSITY', 'COMPUTER', 'TELEPHONE', 'BREAKFAST', 'BIRTHDAY', 'CHILDREN']
+        };
+
         // 成就系统
         const achievements = [
             { id: 'first_5', name: '初出茅庐', description: '答对5道题', icon: '⭐', progress: 0, target: 5, unlocked: false },
             { id: 'streak_5', name: '势如破竹', description: '连续答对5道题', icon: '🔥', progress: 0, target: 5, unlocked: false },
             { id: 'score_20', name: '小有成就', description: '总分达到20分', icon: '🏆', progress: 0, target: 20, unlocked: false },
             { id: 'learn_all', name: '学富五车', description: '学习所有字母', icon: '📚', progress: 0, target: Object.keys(morseCode).length-1, unlocked: false },
-            { id: 'practice_10', name: '勤学苦练', description: '完成10次练习', icon: '💪', progress: 0, target: 10, unlocked: false }
+            { id: 'practice_10', name: '勤学苦练', description: '完成10次练习', icon: '💪', progress: 0, target: 10, unlocked: false },
+            { id: 'word_test_5', name: '单词达人', description: '完成5次单词测试', icon: '🔤', progress: 0, target: 5, unlocked: false }
         ];
 
         // 游戏状态
@@ -504,11 +552,20 @@
             totalQuestions: 0,
             learnedChars: new Set(),
             practiceCount: 0,
-            difficulty: 3 // 默认简单难度（3个字符）
+            wordTestCount: 0,
+            difficulty: 3, // 默认简单难度（3个字符）
+            wordLength: 3, // 默认单词长度
+            testMode: 'read-write' // 默认测试模式
         };
 
         // 排序状态变量
         let currentSortMode = 'default';
+
+        // 单词测试状态
+        let wordTestState = {
+            currentWord: '',
+            currentMorse: ''
+        };
 
         // 初始化页面
         document.addEventListener('DOMContentLoaded', function() {
@@ -535,6 +592,9 @@
             
             // 设置模式选择
             setupModeSelector();
+            
+            // 设置单词测试
+            setupWordTest();
             
             // 加载保存的游戏状态
             loadGameState();
@@ -575,6 +635,124 @@
                     }
                 });
             });
+        }
+
+        // 设置单词测试
+        function setupWordTest() {
+            // 设置测试模式切换
+            const testModeBtns = document.querySelectorAll('.test-mode-btn');
+            testModeBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // 移除所有active类
+                    testModeBtns.forEach(b => b.classList.remove('active'));
+                    // 添加active类到当前按钮
+                    this.classList.add('active');
+                    // 更新测试模式
+                    gameState.testMode = this.getAttribute('data-mode');
+                    // 生成新单词
+                    generateWordTest();
+                });
+            });
+            
+            // 设置单词长度调整
+            const decreaseBtn = document.getElementById('decrease-length');
+            const increaseBtn = document.getElementById('increase-length');
+            const wordLengthDisplay = document.getElementById('word-length');
+            
+            decreaseBtn.addEventListener('click', function() {
+                if (gameState.wordLength > 3) {
+                    gameState.wordLength--;
+                    wordLengthDisplay.textContent = gameState.wordLength;
+                    generateWordTest();
+                }
+            });
+            
+            increaseBtn.addEventListener('click', function() {
+                if (gameState.wordLength < 8) {
+                    gameState.wordLength++;
+                    wordLengthDisplay.textContent = gameState.wordLength;
+                    generateWordTest();
+                }
+            });
+            
+            // 设置检查答案按钮
+            const checkAnswerBtn = document.getElementById('check-answer');
+            const wordInput = document.getElementById('word-input');
+            const testResult = document.getElementById('test-result');
+            
+            checkAnswerBtn.addEventListener('click', function() {
+                const userAnswer = wordInput.value.trim().toUpperCase();
+                if (userAnswer === '') return;
+                
+                // 增加单词测试次数
+                gameState.wordTestCount++;
+                updateAchievementProgress('word_test_5', gameState.wordTestCount);
+                saveGameState();
+                
+                if (userAnswer === wordTestState.currentWord) {
+                    testResult.textContent = '正确！';
+                    testResult.className = 'test-result correct';
+                } else {
+                    testResult.textContent = `错误！正确答案是: ${wordTestState.currentWord}`;
+                    testResult.className = 'test-result incorrect';
+                }
+            });
+            
+            // 设置播放单词按钮
+            const playWordBtn = document.getElementById('play-word');
+            playWordBtn.addEventListener('click', function() {
+                playMorseCode(wordTestState.currentMorse);
+            });
+            
+            // 设置下一单词按钮
+            const nextWordBtn = document.getElementById('next-word');
+            nextWordBtn.addEventListener('click', generateWordTest);
+            
+            // 按回车键检查答案
+            wordInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    checkAnswerBtn.click();
+                }
+            });
+            
+            // 初始生成一个单词测试
+            generateWordTest();
+        }
+
+        // 生成单词测试
+        function generateWordTest() {
+            const morseQuestion = document.getElementById('morse-question');
+            const wordInput = document.getElementById('word-input');
+            const testResult = document.getElementById('test-result');
+            
+            // 清空输入和结果
+            wordInput.value = '';
+            testResult.textContent = '';
+            testResult.className = 'test-result';
+            
+            // 获取对应长度的单词列表
+            const wordList = wordLists[gameState.wordLength] || wordLists[3];
+            
+            // 随机选择一个单词
+            const randomWord = wordList[Math.floor(Math.random() * wordList.length)];
+            wordTestState.currentWord = randomWord;
+            
+            // 生成单词的摩斯密码
+            let morse = '';
+            for (let i = 0; i < randomWord.length; i++) {
+                const char = randomWord[i];
+                morse += (i > 0 ? ' ' : '') + morseCode[char];
+            }
+            wordTestState.currentMorse = morse;
+            
+            // 根据测试模式显示问题
+            if (gameState.testMode === 'read-write') {
+                // 读写模式：显示摩斯密码
+                morseQuestion.textContent = morse;
+            } else {
+                // 听力测试：不显示摩斯密码
+                morseQuestion.textContent = '点击"播放单词"听取摩斯密码';
+            }
         }
 
         // 生成摩斯密码卡片
@@ -671,6 +849,11 @@
                     // 如果是游戏标签，确保游戏已初始化
                     if (tabId === 'game') {
                         initGame();
+                    }
+                    
+                    // 如果是单词测试标签，确保单词测试已初始化
+                    if (tabId === 'word-test') {
+                        generateWordTest();
                     }
                 });
             });
@@ -1021,6 +1204,7 @@
         // 生成成就列表
         function generateAchievements() {
             const achievementsList = document.getElementById('achievements-list');
+            achievementsList.innerHTML = '';
             
             achievements.forEach(achievement => {
                 const achievementEl = document.createElement('div');
@@ -1172,7 +1356,10 @@
                 totalQuestions: gameState.totalQuestions,
                 learnedChars: Array.from(gameState.learnedChars),
                 practiceCount: gameState.practiceCount,
+                wordTestCount: gameState.wordTestCount,
                 difficulty: gameState.difficulty,
+                wordLength: gameState.wordLength,
+                testMode: gameState.testMode,
                 achievements: achievements
             };
             localStorage.setItem('morseCodeTrainer', JSON.stringify(stateToSave));
@@ -1188,11 +1375,26 @@
                 gameState.totalQuestions = state.totalQuestions || 0;
                 gameState.learnedChars = new Set(state.learnedChars || []);
                 gameState.practiceCount = state.practiceCount || 0;
+                gameState.wordTestCount = state.wordTestCount || 0;
                 gameState.difficulty = state.difficulty || 3;
+                gameState.wordLength = state.wordLength || 3;
+                gameState.testMode = state.testMode || 'read-write';
                 
                 // 更新难度按钮状态
                 document.querySelectorAll('.difficulty-btn').forEach(btn => {
                     if (parseInt(btn.getAttribute('data-difficulty')) === gameState.difficulty) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+                
+                // 更新单词长度显示
+                document.getElementById('word-length').textContent = gameState.wordLength;
+                
+                // 更新测试模式按钮状态
+                document.querySelectorAll('.test-mode-btn').forEach(btn => {
+                    if (btn.getAttribute('data-mode') === gameState.testMode) {
                         btn.classList.add('active');
                     } else {
                         btn.classList.remove('active');
@@ -1204,21 +1406,12 @@
                         if (state.achievements[index]) {
                             ach.progress = state.achievements[index].progress || 0;
                             ach.unlocked = state.achievements[index].unlocked || false;
-                            
-                            // 更新UI
-                            const achievementEl = document.getElementById(`achievement-${ach.id}`);
-                            if (achievementEl) {
-                                achievementEl.querySelector('.achievement-progress').textContent = 
-                                    `${ach.progress}/${ach.target}`;
-                                
-                                if (ach.unlocked) {
-                                    achievementEl.classList.add('unlocked');
-                                }
-                            }
                         }
                     });
                 }
                 
+                // 重新生成成就列表
+                generateAchievements();
                 updateScoreDisplay();
             }
         }
